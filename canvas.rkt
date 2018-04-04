@@ -5,17 +5,21 @@
 (require racket/class
          racket/gui
          pict
+         pict/snip
          slideshow
          slideshow/slides-to-picts)
 
 (provide preview-canvas%)
 
 (define preview-canvas%
-  (class canvas%
+  (class editor-canvas%
     (field ;; DrRacket's frame (if set)
            [definitions-text #f]
            ;; used to check file modification time
            [last-seconds 0])
+
+    (define pasteboard (new pasteboard%))
+    (super-new [editor pasteboard])
 
     (define (modified-seconds)
       (or (and definitions-text
@@ -32,22 +36,21 @@
              last-picts]
             [else last-picts]))
 
-    (define (paint-callback canvas dc)
+    ;; update the picts in the pasteboard
+    (define (do-update)
       (define path
         (send definitions-text get-filename))
 
       (cond [path
              (define slides (get-slides path))
+             (send pasteboard erase)
 
              (for/fold ([y 0])
                        ([slide (in-list slides)])
-               (draw-pict (frame slide) dc 0 y)
-               (+ y 250))]
-            [(draw-pict (text "Please load a file or save the buffer to use")
-                        dc 0 0)]))
-
-    (super-new [paint-callback paint-callback]
-               [style '(vscroll)])
+               (define snip
+                 (new pict-snip% [pict (frame slide)]))
+               (send pasteboard insert snip 10 y)
+               (+ y 250))]))
 
     (define (notify-callback)
       (when definitions-text
@@ -59,7 +62,7 @@
             (file-or-directory-modify-seconds path))
           (when (> modified last-seconds)
             (set! last-seconds (current-seconds))
-            (send this refresh-now)))))
+            (do-update)))))
 
     (new timer% [notify-callback notify-callback]
                 [interval 1000])))
