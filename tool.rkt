@@ -29,7 +29,7 @@
             (λ (lst)
               (append (remq preview-canvas lst)
                       (list preview-canvas))))
-      ;(send dragable-parent set-percentages '(3/4 1/4))
+      (send dragable-parent set-percentages '(3/4 1/4))
       (send dragable-parent end-container-sequence))
 
     (define/private (hide-preview)
@@ -46,7 +46,7 @@
     (define/override (make-root-area-container cls parent)
       (set! dragable-parent
             (super make-root-area-container
-                   horizontal-panel%
+                   panel:horizontal-dragable%
                    parent))
       (define root (make-object cls dragable-parent))
       (set! preview-canvas
