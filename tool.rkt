@@ -70,6 +70,13 @@
             (λ (lst) (remq preview-panel lst)))
       root)
 
+    ;; augment this so that the preview updates on tab change
+    (define/augment (on-tab-change from-tab to-tab)
+      (inner (void) on-tab-change from-tab to-tab)
+      (when preview-visible?
+        (set-field! definitions-text preview-canvas (get-definitions-text))
+        (send preview-canvas do-update)))
+
     (super-new)
 
     (define button
