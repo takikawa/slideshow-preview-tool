@@ -52,10 +52,17 @@
       (define root (make-object cls dragable-parent))
       (set! preview-panel
             (new vertical-panel% [parent dragable-parent]))
+      (define button-panel
+        (new horizontal-panel% [parent preview-panel]
+                               [stretchable-height #f]))
       (new button%
-           [parent preview-panel]
+           [parent button-panel]
            [label "Close Preview"]
            [callback (λ (button evt) (hide-preview))])
+      (new button%
+           [parent button-panel]
+           [label "Refresh"]
+           [callback (λ (button evt) (send preview-canvas do-update))])
       (set! preview-canvas
             (new preview-canvas% [parent preview-panel]))
       (send dragable-parent
