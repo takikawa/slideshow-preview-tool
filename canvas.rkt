@@ -37,7 +37,7 @@
             [else last-picts]))
 
     ;; update the picts in the pasteboard
-    (define (do-update)
+    (define/public (do-update)
       (define path
         (send definitions-text get-filename))
 

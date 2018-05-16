@@ -17,6 +17,7 @@
              get-definitions-text
              register-toolbar-button)
 
+    (define preview-panel #f)
     (define preview-canvas #f)
     (define preview-visible? #f)
     (define dragable-parent #f)
@@ -27,8 +28,8 @@
       (send dragable-parent begin-container-sequence)
       (send dragable-parent change-children
             (λ (lst)
-              (append (remq preview-canvas lst)
-                      (list preview-canvas))))
+              (append (remq preview-panel lst)
+                      (list preview-panel))))
       (send dragable-parent set-percentages '(3/4 1/4))
       (send dragable-parent end-container-sequence))
 
@@ -36,7 +37,7 @@
       (set! preview-visible? #f)
       (send dragable-parent change-children
             (λ (lst)
-              (remq preview-canvas lst))))
+              (remq preview-panel lst))))
 
     (define/private (toggle-preview)
       (if preview-visible?
@@ -49,11 +50,17 @@
                    panel:horizontal-dragable%
                    parent))
       (define root (make-object cls dragable-parent))
+      (set! preview-panel
+            (new vertical-panel% [parent dragable-parent]))
+      (new button%
+           [parent preview-panel]
+           [label "Close Preview"]
+           [callback (λ (button evt) (hide-preview))])
       (set! preview-canvas
-            (new preview-canvas% [parent dragable-parent]))
+            (new preview-canvas% [parent preview-panel]))
       (send dragable-parent
             change-children
-            (λ (lst) (remq preview-canvas lst)))
+            (λ (lst) (remq preview-panel lst)))
       root)
 
     (super-new)
@@ -66,6 +73,7 @@
                        (set-field! definitions-text
                                    preview-canvas
                                    (get-definitions-text))
+                       (send preview-canvas do-update)
                        (show-preview))]
            [parent (get-button-panel)]))
 
