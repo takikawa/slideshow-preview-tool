@@ -42,6 +42,9 @@
         (send definitions-text get-filename))
 
       (cond [path
+             ;; save old view for scrolling to
+             (define-values (x y w h) (get-current-view))
+
              (define slides (get-slides path))
              (send pasteboard erase)
 
@@ -50,7 +53,16 @@
                (define snip
                  (new pict-snip% [pict (frame slide)]))
                (send pasteboard insert snip 10 y)
-               (+ y 250))]))
+               (+ y 250))
+
+             (send this scroll-to x y w h #t)]))
+
+    ;; -> (values real real real real)
+    (define (get-current-view)
+      (define-values (x y w h)
+        (values (box 0) (box 0) (box 0) (box 0)))
+      (send (send pasteboard get-admin) get-view x y w h)
+      (values (unbox x) (unbox y) (unbox w) (unbox h)))
 
     (define (notify-callback)
       (when definitions-text
