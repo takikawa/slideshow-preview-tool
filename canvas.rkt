@@ -61,6 +61,8 @@
 
       (cond [path
              ;; save old view for scrolling to
+             ;; TODO: it would be more useful to scroll to the current
+             ;;       index in the slide list instead
              (define-values (x y w h) (get-current-view))
 
              (define slides (get-slides path))
