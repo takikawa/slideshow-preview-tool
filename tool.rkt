@@ -74,7 +74,7 @@
     (define/augment (on-tab-change from-tab to-tab)
       (inner (void) on-tab-change from-tab to-tab)
       (when preview-visible?
-        (set-field! definitions-text preview-canvas (get-definitions-text))
+        (send preview-canvas set-text! (get-definitions-text))
         (send preview-canvas do-update)))
 
     (super-new)
@@ -84,9 +84,9 @@
            [label "Slideshow Preview"]
            [bitmap (make-bitmap 1 1)]
            [callback (λ (button)
-                       (set-field! definitions-text
-                                   preview-canvas
-                                   (get-definitions-text))
+                       (send preview-canvas
+                             set-text!
+                             (get-definitions-text))
                        (send preview-canvas do-update)
                        (show-preview))]
            [parent (get-button-panel)]))

@@ -11,30 +11,48 @@
 
 (provide preview-canvas%)
 
+;; constants
+(define *slide-width* 300)
+(define *slide-height* 225)
+
 (define preview-canvas%
   (class editor-canvas%
-    (field ;; DrRacket's frame (if set)
-           [definitions-text #f]
-           ;; used to check file modification time
-           [last-seconds 0])
-
+    ;; DrRacket's text editor object
+    (define definitions-text #f)
+    ;; The last update time of the slides
+    (define last-seconds 0)
+    ;; The last pict object we generated for slides
+    (define last-picts #f)
+    ;; pasteboard to draw into
     (define pasteboard (new pasteboard%))
+
     (super-new [editor pasteboard])
 
+    ;; -> number
+    ;; return time of modification of slides source file (0 if not set)
     (define (modified-seconds)
       (or (and definitions-text
                (let ([path (send definitions-text get-filename)])
                  (file-or-directory-modify-seconds path)))
           0))
 
-    (define last-picts #f)
+    ;; path -> (listof pict)
+    ;; generate new picts from the slideshow
     (define (get-slides path)
       (cond [(>= (abs (- (modified-seconds) last-seconds))
                  1)
              (set! last-picts
-                   (get-slides-as-picts (path->string path) 300 225 #t))
+                   (get-slides-as-picts
+                    (path->string path)
+                    *slide-width* *slide-height*
+                    #t))
              last-picts]
             [else last-picts]))
+
+    ;; sets the editor to base the preview off of, reset time
+    (define/public (set-text! txt)
+      (set! definitions-text txt)
+      (set! last-seconds 0))
 
     ;; update the picts in the pasteboard
     (define/public (do-update)
@@ -53,7 +71,7 @@
                (define snip
                  (new pict-snip% [pict (frame slide)]))
                (send pasteboard insert snip 10 y)
-               (+ y 250))
+               (+ y (+ *slide-height* 25)))
 
              (send this scroll-to x y w h #t)]))
 
@@ -77,4 +95,4 @@
             (do-update)))))
 
     (new timer% [notify-callback notify-callback]
-                [interval 1000])))
+                [interval 500])))
