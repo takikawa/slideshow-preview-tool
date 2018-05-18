@@ -21,33 +21,25 @@
     (define definitions-text #f)
     ;; The last update time of the slides
     (define last-seconds 0)
-    ;; The last pict object we generated for slides
-    (define last-picts #f)
     ;; pasteboard to draw into
     (define pasteboard (new pasteboard%))
 
     (super-new [editor pasteboard])
 
-    ;; -> number
-    ;; return time of modification of slides source file (0 if not set)
-    (define (modified-seconds)
-      (or (and definitions-text
-               (let ([path (send definitions-text get-filename)])
-                 (file-or-directory-modify-seconds path)))
-          0))
-
     ;; path -> (listof pict)
     ;; generate new picts from the slideshow
     (define (get-slides path)
-      (cond [(>= (abs (- (modified-seconds) last-seconds))
-                 1)
-             (set! last-picts
-                   (get-slides-as-picts
-                    (path->string path)
-                    *slide-width* *slide-height*
-                    #t))
-             last-picts]
-            [else last-picts]))
+      (define picts #f)
+      (define thd
+        (thread
+         (λ ()
+           (set! picts
+                 (get-slides-as-picts
+                  (path->string path)
+                  *slide-width* *slide-height*
+                  #t)))))
+      (yield thd)
+      picts)
 
     ;; sets the editor to base the preview off of, reset time
     (define/public (set-text! txt)
@@ -60,6 +52,7 @@
         (send definitions-text get-filename))
 
       (cond [path
+             (set! last-seconds (current-seconds))
              ;; save old view for scrolling to
              ;; TODO: it would be more useful to scroll to the current
              ;;       index in the slide list instead
@@ -93,7 +86,6 @@
           (define modified
             (file-or-directory-modify-seconds path))
           (when (> modified last-seconds)
-            (set! last-seconds (current-seconds))
             (do-update)))))
 
     (new timer% [notify-callback notify-callback]
